@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 def index(request):
     """Главная страница"""
-    return HttpResponse('<h1>Привет всем!</h1>')
+    return render(request, 'lib_app/index.html')
 
 
 def about(request):
