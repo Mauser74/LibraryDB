@@ -155,7 +155,7 @@ class Book(models.Model):
 class Cart(models.Model):
     """Корзина пользователя: временный выбор книг перед выдачей"""
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    books = models.ManyToManyField(Book, blank=True)
+    books = models.ManyToManyField(Book, blank=True, related_name='carts')
 
     def __str__(self):
         return f"Корзина {self.user.username}"
