@@ -130,7 +130,6 @@ class Book(models.Model):
     )
     isbn = models.CharField(
         max_length=13,                                          # ISBN должен содержать ровно 13 цифр
-        unique=True,
         null=True,
         blank=True
     )
