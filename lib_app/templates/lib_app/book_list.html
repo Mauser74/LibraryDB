@@ -10,13 +10,19 @@
 
     {% for book in books %}
         <div class="book">
-            <strong>{{ book.title }}</strong> — {{ book.author.name }} (ISBN: {{ book.isbn }})
+            <strong><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></strong>
+            <p>{{ book.author.name }}
+            <p>{% if book.isbn %}
+                ISBN: {{ book.isbn }}
+            {% else %}
+                ISBN не присвоен
+            {% endif %}</p>
             {% if book.available %}
                 <span class="available">[Доступна]</span>
                 path('books/', book_list), # <a href="{% url 'add_to_cart' book.id %}">→ В корзину</a>
             {% else %}
                 <span class="unavailable">[Недоступна]</span>
-            {% endif %}
+            {% endif %}</p>
         </div>
     {% empty %}
         <p>Книги не найдены.</p>
