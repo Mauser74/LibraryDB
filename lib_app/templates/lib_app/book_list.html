@@ -4,7 +4,8 @@
     <h2>{{ title }}</h2>
 
     <form method="get">
-        <input type="text" name="q" value="{{ query }}" placeholder="Поиск по названию, автору или ISBN">
+        <label for="site-search">Поиск книги по названию, автору или ISBN:</label>
+        <input type="search" name="q" value="{{ query }}">
         <button>Найти</button>
     </form>
 
