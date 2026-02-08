@@ -1,10 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "lib_app/base.html" %}
 
-</body>
-</html>
+{% block content %}
+    <h2>{{ title }}</h2>
+
+    <form method="get">
+        <input type="text" name="q" value="{{ query }}" placeholder="Поиск по названию, автору или ISBN">
+        <button>Найти</button>
+    </form>
+
+    {% for book in books %}
+        <div class="book">
+            <strong>{{ book.title }}</strong> — {{ book.author.name }} (ISBN: {{ book.isbn }})
+            {% if book.available %}
+                <span class="available">[Доступна]</span>
+                path('books/', book_list), # <a href="{% url 'add_to_cart' book.id %}">→ В корзину</a>
+            {% else %}
+                <span class="unavailable">[Недоступна]</span>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>Книги не найдены.</p>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "lib_app/base.html" %}
+
+{% block content %}
+    <strong>{{ book.author }}</strong>
+    {% if book.translator %}
+        <p>Переводчик: {{ book.translator }}</p>
+    {% endif %}
+    <h1>{{ book.title }}</h1>
+    {% if book.year %}
+        <p>Год издания {{ book.year }}</p>
+    {% else %}
+        <p>Год издания неизвестен</p>
+    {% endif %}
+    {% if book.publisher %}
+        <p>Издательство {{ book.publisher }}</p>
+    {% endif %}
+    {% if book.isbn %}
+        <p>ISBN: {{ book.isbn }}</p>
+    {% endif %}
+    {% if book.thematic %}
+        <p>Тематика: {{ book.thematic }}</p>
+    {% endif %}
+    Выдана {{ book.times_of_issued }} раз<p>
+    {% if book.available %}
+        <p>Доступна для выдачи</p>
+    {% else %}
+        <p>Выдана</p>
+    {% endif %}
+{% endblock %}
