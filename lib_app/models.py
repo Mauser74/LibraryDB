@@ -142,8 +142,18 @@ class Book(models.Model):
             MaxValueValidator(datetime.now().year)              # Не больше текущего года
         ]
     )
-    thematic = models.TextField(default = "")                   # тематические рубрики
-    key_words = models.TextField(default = "")                  # ключевые слова
+    # тематические рубрики
+    short_description = models.TextField(
+        default = "",
+        null=True,
+        blank=True
+    )
+    # ключевые слова
+    key_words = models.TextField(
+        default = "",
+        null=True,
+        blank=True
+    )
     available = models.BooleanField(default=True)               # доступна ли для выдачи
     times_of_issued = models.PositiveIntegerField(default=0)    # сколько раз выдана книга
 
