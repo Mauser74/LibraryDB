@@ -4,7 +4,8 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
-from lib_app.models import Book, Cart, BorrowedBook
+from lib_app.forms import BookForm
+from lib_app.models import Book, Cart, BorrowedBook, Author
 
 
 # Create your views here.
@@ -68,11 +69,39 @@ def book_detail(request, book_id):
     return render(request, 'lib_app/book_detail.html', context)
 
 
+def book_add(request):
+    """Добавление книги"""
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            Book.objects.create(
+                title=form.cleaned_data.get('title'),
+                author=Author.objects.first(),
+                translator=form.cleaned_data.get('translator'),
+                publisher=form.cleaned_data.get('publisher'),
+                isbn=form.cleaned_data.get('isbn'),
+                year=form.cleaned_data.get('year'),
+                short_description=form.cleaned_data.get('short_description'),
+                keywords=form.cleaned_data.get('keywords'),
+                available=form.cleaned_data.get('available'),
+                times_of_issued=form.cleaned_data.get('times_of_issued'),
+            )
+            return redirect('book_list')
+    else:
+        form = BookForm()
+
+    context = {
+        'form': form,
+        'title': 'добавить книгу'
+    }
+    return render(request, 'lib_app/book_add.html', context)
+
+
 # @login_required
 def view_cart(request):
     """Просмотр корзины"""
     cart, created = Cart.objects.get_or_create(user=request.user)
-    return render(request, 'library/cart.html', {'cart': cart})
+    return render(request, 'lib_app/cart.html', {'cart': cart})
 
 
 @login_required
