@@ -1,6 +1,7 @@
 from datetime import datetime
-
 from django import forms
+from django.core.exceptions import ValidationError
+from .models import Book
 
 
 class BookForm(forms.Form):
@@ -54,6 +55,65 @@ class BookForm(forms.Form):
     times_of_issued = forms.IntegerField(
         label='Сколько раз книга выдана',
     )
+
+
+class BookModelForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        # Определяет порядок следования полей на странице
+        fields = (
+            'title',
+            'author',
+            'translator',
+            'publisher',
+            'isbn',
+            'year',
+            'short_description',
+            'key_words',
+            'times_of_issued',
+            'available',
+        )
+        # Названия полей
+        labels = {
+            'title': 'Название книги',
+            'author': 'Автор',
+            'translator': 'Переводчик',
+            'publisher': 'Издательство',
+            'isbn': 'ISBN',
+            'year': 'Год издания',
+            'short_description': 'Краткое описание',
+            'key_words': 'Ключевые слова',
+            'available': 'Доступна для выдачи',
+            'times_of_issued': 'Выдана раз',
+        }
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите название'}),
+            'author': forms.Select(attrs={'class': 'form-control'}),
+            'translator': forms.Select(attrs={'class': 'form-control'}),
+            'publisher': forms.Select(attrs={'class': 'form-control'}),
+            'isbn': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 32, 'placeholder': 'Введите ISBN'}),
+            'year': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Год издания'}),
+            'short_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Краткое описание книги'}),
+            'key_words': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Введите ключевые слова'}),
+            'times_of_issued': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Сколько раз книга выдана'}),
+            'available': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'width: 20px; height: 20px;'}),
+        }
+
+    def clean_title(self):
+        """Валидация названия книги"""
+        title = self.cleaned_data.get('title')
+        if len(title) > 255:
+            raise ValidationError('Слишком длинное название (более 255 символов)')
+        elif len(title) == 1:
+            raise ValidationError('Название не должно быть пустым')
+        return title
+
+    # def clean_isbn(self):
+    #     isbn = self.cleaned_data.get('isbn')
+    #     clean_isbn = ''.join(char for char in isbn if char.isdigit())
+    #     if len(clean_isbn) > 13:
+    #         raise ValidationError('ISBN должен содержать 13 цифр')
+    #     return isbn
 
 
     # title = models.CharField(max_length=255)

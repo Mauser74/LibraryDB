@@ -9,8 +9,9 @@
         <button>Найти</button>
     </form>
 
-    {% for book in books %}
-        <div class="book">
+    <ul class="list-group">
+        {% for book in books %}
+        <li class="list-group-item">
             <strong><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></strong>
             <p>{{ book.author.name }}
             <p>{% if book.isbn %}
@@ -20,12 +21,14 @@
             {% endif %}</p>
             {% if book.available %}
                 <span class="available">[Доступна]</span>
-                path('books/', book_list), # <a href="{% url 'add_to_cart' book.id %}">→ В корзину</a>
+                path('books/', book_list), # <a href="{% url 'add_to_cart' book.id %}">В корзину</a>
             {% else %}
                 <span class="unavailable">[Недоступна]</span>
             {% endif %}</p>
-        </div>
-    {% empty %}
-        <p>Книги не найдены.</p>
-    {% endfor %}
+            <a href="{% url 'book_edit' book.id %}" class="btn btn-sm btn-warning">Редактировать описание</a>
+        </li>
+        {% empty %}
+            <p>Книги не найдены.</p>
+        {% endfor %}
+    </ul>
 {% endblock %}

@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
-from lib_app.forms import BookForm
+from lib_app.forms import BookForm, BookModelForm
 from lib_app.models import Book, Cart, BorrowedBook, Author
 
 
@@ -72,29 +72,64 @@ def book_detail(request, book_id):
 def book_add(request):
     """Добавление книги"""
     if request.method == 'POST':
-        form = BookForm(request.POST)
+        form = BookModelForm(request.POST)
         if form.is_valid():
-            Book.objects.create(
-                title=form.cleaned_data.get('title'),
-                author=Author.objects.first(),
-                translator=form.cleaned_data.get('translator'),
-                publisher=form.cleaned_data.get('publisher'),
-                isbn=form.cleaned_data.get('isbn'),
-                year=form.cleaned_data.get('year'),
-                short_description=form.cleaned_data.get('short_description'),
-                keywords=form.cleaned_data.get('keywords'),
-                available=form.cleaned_data.get('available'),
-                times_of_issued=form.cleaned_data.get('times_of_issued'),
-            )
+            form.save()
             return redirect('book_list')
     else:
-        form = BookForm()
+        form = BookModelForm()
 
     context = {
         'form': form,
-        'title': 'добавить книгу'
+        'title': 'Добавить книгу'
     }
     return render(request, 'lib_app/book_add.html', context)
+
+
+# def book_add(request):
+#     """Добавление книги"""
+#     if request.method == 'POST':
+#         form = BookForm(request.POST)
+#         if form.is_valid():
+#             Book.objects.create(
+#                 title=form.cleaned_data.get('title'),
+#                 author=Author.objects.first(),
+#                 translator=form.cleaned_data.get('translator'),
+#                 publisher=form.cleaned_data.get('publisher'),
+#                 isbn=form.cleaned_data.get('isbn'),
+#                 year=form.cleaned_data.get('year'),
+#                 short_description=form.cleaned_data.get('short_description'),
+#                 keywords=form.cleaned_data.get('keywords'),
+#                 available=form.cleaned_data.get('available'),
+#                 times_of_issued=form.cleaned_data.get('times_of_issued'),
+#             )
+#             return redirect('book_list')
+#     else:
+#         form = BookForm()
+#
+#     context = {
+#         'form': form,
+#         'title': 'добавить книгу'
+#     }
+#     return render(request, 'lib_app/book_add.html', context)
+
+def book_edit(request, book_id):
+    """Редактирование книги"""
+    book = get_object_or_404(Book, pk=book_id)
+
+    if request.method == 'POST':
+        form = BookModelForm(request.POST, instance=book)
+        if form.is_valid():
+            form.save()
+            return redirect('book_list')
+    else:
+        form = BookModelForm(instance=book)
+
+    context = {
+        'form': form,
+        'title': 'Редактировать описание книги'
+    }
+    return render(request, 'lib_app/book_edit.html', context)
 
 
 # @login_required
