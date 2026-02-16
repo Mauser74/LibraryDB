@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Вы уверены, что хотите удалить эту книгу?</h1>
+    <h5>{{ object.author }}</h5>
+    {% if object.translator %}
+        <h5>Переводчик: {{ book.translator }}</h5>
+    {% endif %}
+    <h5>{{ object.title }}</h5>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить книгу</button>
+        <a href="{% url 'book_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}

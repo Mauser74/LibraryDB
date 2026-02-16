@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from lib_app.forms import BookForm, BookModelForm
 from lib_app.models import Book, Cart, BorrowedBook, Author
@@ -33,57 +35,87 @@ def add_to_cart(request, book_id):
     return redirect('book_list')
 
 
-#@login_required # Требование авторизации пользователя для доступа к этой странице
-def book_list(request):
-    """Список всех книг с поиском"""
-    # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
-    query = request.GET.get('q', '')
-
-    if query:
-        books = Book.objects.filter(
-            Q(title__icontains=query) |
-            Q(author__name__icontains=query) |
-            Q(isbn__icontains=query)
-        )
-    else:
-        books = Book.objects.all()
-
-    context = {
-        'title': 'Выбор книг',
-        'books': books,
-        'query': query,
-    }
-
-    return render(request, 'lib_app/book_list.html', context)
+class BookBase():
+    """Базовый класс"""
+    model = Book
 
 
-def book_detail(request, book_id):
+class BookListView(BookBase, ListView):
+    """Список всех книг"""
+    # model = Book
+    # template_name = 'lib_app/book_list.html'
+    # context_object_name = 'book_list'
+    def get_queryset(self):
+        pass
+
+
+# #@login_required # Требование авторизации пользователя для доступа к этой странице
+# def book_list(request):
+#     """Список всех книг с поиском"""
+#     # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
+#     query = request.GET.get('q', '')
+#
+#     if query:
+#         books = Book.objects.filter(
+#             Q(title__icontains=query) |
+#             Q(author__name__icontains=query) |
+#             Q(isbn__icontains=query)
+#         )
+#     else:
+#         books = Book.objects.all()
+#
+#     context = {
+#         'title': 'Выбор книг',
+#         'books': books,
+#         'query': query,
+#     }
+#
+#     return render(request, 'lib_app/book_list.html', context)
+
+
+class BookDetailView(BookBase, DetailView):
     """Детальная информация о книге"""
-    book = get_object_or_404(Book, pk=book_id)
-
-    context = {
-        'title': f'Подробнее о {book.title}',
-        'book': book,
-    }
-
-    return render(request, 'lib_app/book_detail.html', context)
+    # model = Book
+    # template_name = 'lib_app/book_detail.html'
+    # context_object_name = 'book'
 
 
-def book_add(request):
+# def book_detail(request, book_id):
+#     """Детальная информация о книге"""
+#     book = get_object_or_404(Book, pk=book_id)
+#
+#     context = {
+#         'title': f'Подробнее о {book.title}',
+#         'book': book,
+#     }
+#
+#     return render(request, 'lib_app/book_detail.html', context)
+
+
+class BookCreateView(BookBase, CreateView):
     """Добавление книги"""
-    if request.method == 'POST':
-        form = BookModelForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('book_list')
-    else:
-        form = BookModelForm()
+    #model = Book
+    #template_name = 'lib_app/book_form.html'
+    template_name = 'lib_app/book_add.html'
+    form_class = BookModelForm
+    success_url = reverse_lazy('book_list')
 
-    context = {
-        'form': form,
-        'title': 'Добавить книгу'
-    }
-    return render(request, 'lib_app/book_add.html', context)
+
+# def book_add(request):
+#     """Добавление книги"""
+#     if request.method == 'POST':
+#         form = BookModelForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('book_list')
+#     else:
+#         form = BookModelForm()
+#
+#     context = {
+#         'form': form,
+#         'title': 'Добавить книгу'
+#     }
+#     return render(request, 'lib_app/book_add.html', context)
 
 
 # def book_add(request):
@@ -113,23 +145,33 @@ def book_add(request):
 #     }
 #     return render(request, 'lib_app/book_add.html', context)
 
-def book_edit(request, book_id):
+
+class BookUpdateView(BookBase, UpdateView):
     """Редактирование книги"""
-    book = get_object_or_404(Book, pk=book_id)
+    #model = Book
+    #template_name = 'lib_app/book_form.html'
+    template_name = 'lib_app/book_edit.html'
+    form_class = BookModelForm
+    success_url = reverse_lazy('book_list')
 
-    if request.method == 'POST':
-        form = BookModelForm(request.POST, instance=book)
-        if form.is_valid():
-            form.save()
-            return redirect('book_list')
-    else:
-        form = BookModelForm(instance=book)
 
-    context = {
-        'form': form,
-        'title': 'Редактировать описание книги'
-    }
-    return render(request, 'lib_app/book_edit.html', context)
+# def book_edit(request, book_id):
+#     """Редактирование книги"""
+#     book = get_object_or_404(Book, pk=book_id)
+#
+#     if request.method == 'POST':
+#         form = BookModelForm(request.POST, instance=book)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('book_list')
+#     else:
+#         form = BookModelForm(instance=book)
+#
+#     context = {
+#         'form': form,
+#         'title': 'Редактировать описание книги'
+#     }
+#     return render(request, 'lib_app/book_edit.html', context)
 
 
 # @login_required
@@ -163,3 +205,10 @@ def issue_books_from_cart(request, user_id):
             book.save()
     cart.books.clear()  # очищаем корзину после выдачи
     return redirect('admin:library_app_cart_changelist')
+
+
+class BookDeleteView(BookBase, DeleteView):
+    """Удаление книги"""
+    #model = Book
+    template_name = 'lib_app/book_delete.html'
+    success_url = reverse_lazy('book_list')

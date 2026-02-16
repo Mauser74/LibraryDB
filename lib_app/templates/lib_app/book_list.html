@@ -10,7 +10,7 @@
     </form>
 
     <ul class="list-group">
-        {% for book in books %}
+        {% for book in book_list %}
         <li class="list-group-item">
             <strong><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></strong>
             <p>{{ book.author.name }}
@@ -26,6 +26,7 @@
                 <span class="unavailable">[Недоступна]</span>
             {% endif %}</p>
             <a href="{% url 'book_edit' book.id %}" class="btn btn-sm btn-warning">Редактировать описание</a>
+            <a href="{% url 'book_delete' book.id %}" class="btn btn-sm btn-danger">Удалить книгу</a>
         </li>
         {% empty %}
             <p>Книги не найдены.</p>
