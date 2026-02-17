@@ -1,25 +1,42 @@
 from django.contrib import messages
+from django.contrib.admin.utils import QUOTE_MAP
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
 from lib_app.forms import BookForm, BookModelForm
 from lib_app.models import Book, Cart, BorrowedBook, Author
 
 
-# Create your views here.
 
-def index(request):
-    """Главная страница"""
-    return render(request, 'lib_app/index.html')
+class IndexTemplateView(TemplateView):
+    template_name = 'lib_app/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Главная страница'
+        return context
+
+# def index(request):
+#     """Главная страница"""
+#     return render(request, 'lib_app/index.html')
+
+class AboutTemplateView(TemplateView):
+    template_name = 'lib_app/about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'О библиотеке'
+        return context
 
 
-def about(request):
-    """Страница о нас"""
-    return HttpResponse('<h1>О нас!</h1>')
+# def about(request):
+#     """Страница о нас"""
+#     return HttpResponse('<h1>О нас!</h1>')
 
 
 #@login_required
@@ -46,7 +63,26 @@ class BookListView(BookBase, ListView):
     # template_name = 'lib_app/book_list.html'
     # context_object_name = 'book_list'
     def get_queryset(self):
-        pass
+        queryset = super().get_queryset()
+        #return queryset.filter(is_available=True)
+        # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
+        query = self.request.GET.get('q', '')
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(author__name__icontains=query) |
+                Q(isbn__icontains=query) |
+                Q(key_words__icontains=query)
+            )
+        else:
+            books = Book.objects.all()
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Список книг'
+        return context
+
 
 
 # #@login_required # Требование авторизации пользователя для доступа к этой странице
@@ -79,6 +115,13 @@ class BookDetailView(BookBase, DetailView):
     # template_name = 'lib_app/book_detail.html'
     # context_object_name = 'book'
 
+    def get(self, request, *args, **kwargs):
+        book = self.get_object()
+        book.times_of_issued = getattr(book, 'times_of_issued', 0) + 1
+        book.save(update_fields=['times_of_issued'])
+        return super().get(request, *args, **kwargs)
+
+
 
 # def book_detail(request, book_id):
 #     """Детальная информация о книге"""
@@ -99,6 +142,10 @@ class BookCreateView(BookBase, CreateView):
     template_name = 'lib_app/book_add.html'
     form_class = BookModelForm
     success_url = reverse_lazy('book_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Книга успешно добавлена')
+        return super().form_valid(form)
 
 
 # def book_add(request):
@@ -153,6 +200,10 @@ class BookUpdateView(BookBase, UpdateView):
     template_name = 'lib_app/book_edit.html'
     form_class = BookModelForm
     success_url = reverse_lazy('book_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Описание книги отредактировано')
+        return super().form_valid(form)
 
 
 # def book_edit(request, book_id):
