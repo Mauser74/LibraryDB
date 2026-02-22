@@ -1,63 +1,12 @@
-from datetime import datetime
+from datetime import date
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Book
+from .models import Book, Author
 
-
-class BookForm(forms.Form):
-    """Форма добавления книги"""
-    title = forms.CharField(
-        max_length=255,
-        label='Название книги',
-        widget=forms.TextInput(
-            attrs={'class': 'form-control', 'placeholder': 'Введите название'}
-        ),
-    )
-    author = forms.CharField(
-        label='Автор',
-    )
-    translator = forms.CharField(
-        label='Переводчик',
-    )
-    publisher = forms.CharField(
-        label='Издатель',
-    )
-    isbn = forms.CharField(
-        label='ISBN',
-        widget=forms.TextInput(
-            attrs={'class': 'form-control', 'placeholder': 'Введите ISBN'}
-        ),
-    )
-    year = forms.IntegerField(
-        label='Год издания',
-        min_value = 1,
-        max_value = datetime.now().year,
-        widget=forms.NumberInput(
-            attrs={'class': 'form-control', 'placeholder': 'Введите год'}
-        ),
-    )
-    short_description = forms.CharField(
-        label='Краткое описание',
-        widget=forms.Textarea(
-            attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Введите описание'}
-        ),
-    )
-    keywords = forms.CharField(
-        label='Ключевые слова',
-        widget=forms.Textarea(
-            attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Введите ключевые слова'}
-        ),
-    )
-    available = forms.BooleanField(
-        label='Доступность для получения',
-        widget=forms.CheckboxInput()
-    )
-    times_of_issued = forms.IntegerField(
-        label='Сколько раз книга выдана',
-    )
 
 
 class BookModelForm(forms.ModelForm):
+    """Форма добавления книги"""
     class Meta:
         model = Book
         # Определяет порядок следования полей на странице
@@ -108,21 +57,75 @@ class BookModelForm(forms.ModelForm):
             raise ValidationError('Название не должно быть пустым')
         return title
 
-    # def clean_isbn(self):
-    #     isbn = self.cleaned_data.get('isbn')
-    #     clean_isbn = ''.join(char for char in isbn if char.isdigit())
-    #     if len(clean_isbn) > 13:
-    #         raise ValidationError('ISBN должен содержать 13 цифр')
-    #     return isbn
 
 
-    # title = models.CharField(max_length=255)
-    # author = models.ForeignKey(Author
-    # translator = models.ForeignKey(Translator,
-    # publisher = models.ForeignKey(Publisher,
-    # isbn = models.CharField(
-    # year = models.PositiveIntegerField(
-    # short_description = models.TextField(
-    # key_words = models.TextField(
-    # available = models.BooleanField(default=True)  # доступна ли для выдачи
-    # times_of_issued = models.PositiveIntegerField(default=0)  # сколько раз выдана книга
+class AuthorModelForm(forms.ModelForm):
+    """Форма добавления автора"""
+    class Meta:
+        model = Author
+        # Определяет порядок следования полей на странице
+        fields = (
+            'name',
+            'date_of_birth',
+            'date_of_death',
+        )
+
+        # Названия полей
+        labels = {
+            'name': 'Имя автора',
+            'date_of_birth': 'Дата рождения',
+            'date_of_death': 'Дата смерти',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите имя автора'}),
+            'date_of_birth': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date',
+                    #'placeholder': 'ГГГГ-ММ-ДД'
+                },
+                format = '%Y-%m-%d'
+            ),
+            'date_of_death': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date',
+                    #'placeholder': 'ГГГГ-ММ-ДД'
+                },
+                format='%Y-%m-%d'
+            )
+        }
+
+    def clean_date_of_birth(self):
+        """Валидация даты рождения"""
+        dob = self.cleaned_data.get('date_of_birth')
+        if dob and dob > date.today():
+            raise ValidationError(
+                'Дата рождения не может быть в будущем.',
+                code='birth_in_future'
+            )
+        return dob
+
+    def clean_date_of_death(self):
+        """Валидация даты смерти (только сама по себе)"""
+        dod = self.cleaned_data.get('date_of_death')
+        if dod and dod > date.today():
+            raise ValidationError(
+                'Дата смерти не может быть в будущем.',
+                code='death_in_future'
+            )
+        return dod
+
+    def clean(self):
+        """Валидация между полями: дата смерти должна быть > даты рождения"""
+        cleaned_data = super().clean()
+        dob = cleaned_data.get('date_of_birth')
+        dod = cleaned_data.get('date_of_death')
+
+        if dob and dod:
+            if dod <= dob:
+                raise ValidationError(
+                    'Дата смерти не может быть раньше даты рождения.',
+                    code='death_before_birth'
+                )
+        return cleaned_data

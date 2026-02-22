@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+{% block content %}
+    <h2>Удалить автора?</h2>
+    <p>Вы уверены, что хотите удалить автора «{{ object.name }}»?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a href="{% url 'author_list' %}" class="btn btn-secondary">Отмена</a>
+    </form>
+{% endblock %}
