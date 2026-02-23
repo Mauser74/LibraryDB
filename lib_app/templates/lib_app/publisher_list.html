@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ page_title }}</h1>
+
+    <form method="get">
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Поиск по названию издательства">
+        <button type="submit">Найти</button>
+    </form>
+
+    <ul>
+    {% for publisher in publishers %}
+        <li>{{ publisher.name }}</li>
+    {% empty %}
+        <li>Издательства не найдены.</li>
+    {% endfor %}
+    </ul>
+
+    <!-- Пагинация (если paginate_by задан) -->
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?q={{ search_query|urlencode }}&page=1">&laquo; первая</a>
+                <a href="?q={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}">предыдущая</a>
+            {% endif %}
+
+            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?q={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}">следующая</a>
+                <a href="?q={{ search_query|urlencode }}&page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

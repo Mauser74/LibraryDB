@@ -15,19 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import remove_from_cart, issue_books_from_cart, view_cart, add_to_cart
+from . import views
 from .views import (
-    AuthorListView,
-    AuthorCreateView,
-    AuthorUpdateView,
-    AuthorDeleteView,
-    BookListView,
-    BookDetailView,
-    BookCreateView,
-    BookUpdateView,
-    BookDeleteView,
-    IndexTemplateView,
-    AboutTemplateView,
+    AuthorListView, AuthorCreateView, AuthorUpdateView, AuthorDeleteView,
+    BookListView, BookDetailView, BookCreateView, BookUpdateView, BookDeleteView,
+    PublisherListView, PublisherCreateView, PublisherUpdateView, PublisherDeleteView,
+    CartView, AddToCartView, RemoveFromCartView, IssueBooksFromCartView,
+    IndexTemplateView, AboutTemplateView,
 )
 
 urlpatterns = [
@@ -41,9 +35,14 @@ urlpatterns = [
     path('book/<int:pk>/', BookDetailView.as_view(), name='book_detail'),
     path('book/<int:pk>/edit/', BookUpdateView.as_view(), name='book_edit'),
     path('book/<int:pk>/delete/', BookDeleteView.as_view(), name='book_delete'),
+    path('publishers/', PublisherListView.as_view(), name='publisher_list'),
+    path('publisher/add/', PublisherCreateView.as_view(), name='publisher_add'),
+    path('publisher/<int:pk>/edit/', PublisherUpdateView.as_view(), name='publisher_edit'),
+    path('publisher/<int:pk>/delete/', PublisherDeleteView.as_view(), name='publisher_delete'),
+    path('cart/', CartView.as_view(), name='view_cart'),
+    path('cart/add/<int:book_id>/', AddToCartView.as_view(), name='add_to_cart'),
+    path('cart/remove/<int:book_id>/', RemoveFromCartView.as_view(), name='remove_from_cart'),
+    path('staff/issue-cart/<int:user_id>/', IssueBooksFromCartView.as_view(), name='issue_books_from_cart'),
+    path('staff/users-with-cart/', views.UsersWithCartView.as_view(), name='users_with_cart'),
     path('about/', AboutTemplateView.as_view(), name='about'),
-    #path('cart/', view_cart, name='view_cart'),
-    path('cart/add/<int:book_id>/', add_to_cart, name='add_to_cart'),
-    path('cart/remove/<int:book_id>/', remove_from_cart, name='remove_from_cart'),
-    path('admin/issue-cart/<int:user_id>/', issue_books_from_cart, name='issue_books_from_cart'),
 ]

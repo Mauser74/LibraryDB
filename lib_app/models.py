@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from datetime import datetime, date, timedelta
+from django.conf import settings
+
 
 # Create your models here.
 
@@ -37,6 +39,7 @@ class Author(models.Model):
         return self.name
 
 
+
 class Translator(models.Model):
     """Модель переводчика книги"""
     name = models.CharField(max_length=200)
@@ -69,39 +72,22 @@ class Translator(models.Model):
         return self.name
 
 
-class User(models.Model):
-    """Модель пользователя библиотеки"""
-    name = models.CharField(max_length=200)
-    date_of_birth = models.DateField(null=True, blank=True)
-
-    def clean(self):
-        """
-        Проверяет возраст.
-        Вызывается при валидации формы или при вызове full_clean().
-        """
-        if self.date_of_birth:
-            if self.date_of_birth > date.today() + timedelta(days=7 * 365):
-                raise ValidationError(
-                    "Возраст не может быть меньше 7 лет."
-                )
-
-    def save(self, *args, **kwargs):
-        """
-        Переопределяем save(), чтобы автоматически вызывать валидацию.
-        """
-        self.full_clean()  # вызывает clean() и другие валидации
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
 
 class Publisher(models.Model):
     """Модель издательства книги"""
-    name = models.CharField(max_length=64)
+    name = models.CharField(
+        'Название издательства',
+        max_length=64,
+        unique=True
+    )
+
+    class Meta:
+        verbose_name = 'Издательство'
+        verbose_name_plural = 'Издательства'
 
     def __str__(self):
         return self.name
+
 
 
 class Book(models.Model):
@@ -144,13 +130,13 @@ class Book(models.Model):
     )
     # тематические рубрики
     short_description = models.TextField(
-        default = "",
+        default="",
         null=True,
         blank=True
     )
     # ключевые слова
     key_words = models.TextField(
-        default = "",
+        default="",
         null=True,
         blank=True
     )
@@ -161,18 +147,26 @@ class Book(models.Model):
         return f"{self.author}, {self.title}"
 
 
+
 class Cart(models.Model):
     """Корзина пользователя: временный выбор книг перед выдачей"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     books = models.ManyToManyField(Book, blank=True, related_name='carts')
 
     def __str__(self):
-        return f"Корзина {self.user.username}"
+        return f"Корзина {self.user.full_name}"
+
 
 
 class BorrowedBook(models.Model):
     """Фактически выданные книги пользователю"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     borrowed_at = models.DateTimeField(auto_now_add=True)
     returned_at = models.DateTimeField(null=True, blank=True)
@@ -180,4 +174,4 @@ class BorrowedBook(models.Model):
 
     def __str__(self):
         status = "возвращена" if self.returned else "выдана"
-        return f"{self.user.username} — {self.book.title} ({status})"
+        return f"{self.user.full_name} — {self.book.title} ({status})"

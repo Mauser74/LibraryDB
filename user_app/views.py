@@ -17,14 +17,16 @@ class RegisterView(FormView):
         return super().form_valid(form)
 
 
+
 class CustomLoginView(LoginView):
     template_name = 'user_app/login.html'
-    authentication_form = CustomAuthenticationForm
+    form_class = CustomAuthenticationForm
     redirect_authenticated_user = True
     success_url = reverse_lazy('book_list')
 
     def get_success_url(self):
         return self.success_url
+
 
 
 class CustomLogoutView(LogoutView):

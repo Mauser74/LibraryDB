@@ -1,4 +1,4 @@
-{% extends "lib_app/base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 <h2>Ваша корзина</h2>
@@ -8,7 +8,10 @@
     {% for book in cart.books.all %}
         <li>
             {{ book.title }} — {{ book.author.name }}
-            <a href="{% url 'remove_from_cart' book.id %}">Убрать</a>
+            <form method="post" action="{% url 'remove_from_cart' book.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">Убрать</button>
+            </form>
         </li>
     {% endfor %}
     </ul>

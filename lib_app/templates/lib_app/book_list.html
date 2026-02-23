@@ -3,33 +3,63 @@
 {% block content %}
     <h2>{{ page_title }}</h2>
 
-    <form method="get">
+    <form method="get" class="mb-3">
         <label for="site-search">Поиск книги по названию, автору или ISBN:</label>
-        <input type="search" name="q" value="{{ query }}">
-        <button>Найти</button>
+        <input type="search" id="site-search" name="q" value="{{ search_query|default:'' }}" class="form-control" style="max-width: 400px; display: inline;">
+        <button type="submit" class="btn btn-primary">Найти</button>
     </form>
 
     <ul class="list-group">
         {% for book in book_list %}
         <li class="list-group-item">
-            <strong><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></strong>
-            <p>{{ book.author.name }}
-            <p>{% if book.isbn %}
-                ISBN: {{ book.isbn }}
-            {% else %}
-                ISBN не присвоен
-            {% endif %}</p>
+            <h5><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></h5>
+            <p><strong>Автор:</strong> {{ book.author.name }}</p>
+            <p>
+                {% if book.isbn %}
+                    ISBN: {{ book.isbn }}
+                {% else %}
+                    ISBN не присвоен
+                {% endif %}
+            </p>
             {% if book.available %}
-                <span class="available">[Доступна]</span>
-                path('books/', book_list), # <a href="{% url 'add_to_cart' book.id %}">В корзину</a>
+                <span class="text-success">[Доступна]</span>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'add_to_cart' book.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary">В корзину</button>
+                    </form>
+                {% endif %}
             {% else %}
-                <span class="unavailable">[Недоступна]</span>
-            {% endif %}</p>
-            <a href="{% url 'book_edit' book.id %}" class="btn btn-sm btn-warning">Редактировать описание</a>
-            <a href="{% url 'book_delete' book.id %}" class="btn btn-sm btn-danger">Удалить книгу</a>
+                <span class="text-danger">[Недоступна]</span>
+            {% endif %}
+
+            {% if perms.lib_app.change_book %}
+                <a href="{% url 'book_edit' book.id %}" class="btn btn-sm btn-warning">Редактировать</a>
+            {% endif %}
+            {% if perms.lib_app.delete_book %}
+                <a href="{% url 'book_delete' book.id %}" class="btn btn-sm btn-danger">Удалить</a>
+            {% endif %}
         </li>
         {% empty %}
-            <p>Книги не найдены.</p>
+            <li class="list-group-item">Книги не найдены.</li>
         {% endfor %}
     </ul>
+
+    {% if is_paginated %}
+      <nav aria-label="Страницы">
+        <ul class="pagination justify-content-center mt-3">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?q={{ search_query|urlencode }}&page=1">« первая</a></li>
+            <li class="page-item"><a class="page-link" href="?q={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}">‹ предыдущая</a></li>
+          {% endif %}
+
+          <li class="page-item disabled"><span class="page-link">Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span></li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?q={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}">следующая ›</a></li>
+            <li class="page-item"><a class="page-link" href="?q={{ search_query|urlencode }}&page={{ page_obj.paginator.num_pages }}">последняя »</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
 {% endblock %}

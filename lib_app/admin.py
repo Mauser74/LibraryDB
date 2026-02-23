@@ -1,13 +1,14 @@
 from django.contrib import admin
-from .models import Book, Author, Translator, Publisher, Cart, User, BorrowedBook
+from .models import Book, Author, Translator, Publisher, Cart, BorrowedBook
+from user_app.models import CustomUser
 
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'year', 'publisher', 'available', 'times_of_issued')
     ordering = ('author', 'title',)
-    search_fields = ('title', 'author',)
-    search_help_text = 'Введите часть заголовка или имени автора для поиска в каталоге'
+    search_fields = ('title', 'author__name',)
+    search_help_text = 'Введите часть заголовка или имени автора для поиска в каталоге.'
     readonly_fields = ('times_of_issued',)
 
 
@@ -32,19 +33,17 @@ class PublisherAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'date_of_birth')
-    ordering = ('name', 'date_of_birth',)
-
-
-
 @admin.register(BorrowedBook)
 class BorrowedBookAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('user', 'book', 'borrowed_at', 'returned')
+    list_filter = ('returned', 'borrowed_at')
 
 
 
-# @admin.register(Cart)
-# class CartAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'books')
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'books_count')
+
+    @admin.display(description='Книг')
+    def books_count(self, obj):
+        return obj.books.count()

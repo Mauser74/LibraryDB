@@ -1,8 +1,7 @@
 from datetime import date
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Book, Author
-
+from .models import Book, Author, Publisher
 
 
 class BookModelForm(forms.ModelForm):
@@ -19,9 +18,10 @@ class BookModelForm(forms.ModelForm):
             'year',
             'short_description',
             'key_words',
-            'times_of_issued',
             'available',
         )
+        # Это поле не редактируем
+        exclude = ('times_of_issued',)
         # Названия полей
         labels = {
             'title': 'Название книги',
@@ -84,7 +84,7 @@ class AuthorModelForm(forms.ModelForm):
                     'type': 'date',
                     #'placeholder': 'ГГГГ-ММ-ДД'
                 },
-                format = '%Y-%m-%d'
+                format='%Y-%m-%d'
             ),
             'date_of_death': forms.DateInput(
                 attrs={
@@ -129,3 +129,18 @@ class AuthorModelForm(forms.ModelForm):
                     code='death_before_birth'
                 )
         return cleaned_data
+
+
+
+class PublisherModelForm(forms.ModelForm):
+    """Форма добавления издательства"""
+    class Meta:
+        model = Publisher
+        # Определяет порядок следования полей на странице
+        fields = ('name',)
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Введите название издательства'
+            })
+        }
