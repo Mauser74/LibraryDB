@@ -44,5 +44,9 @@ urlpatterns = [
     path('cart/remove/<int:book_id>/', RemoveFromCartView.as_view(), name='remove_from_cart'),
     path('staff/issue-cart/<int:user_id>/', IssueBooksFromCartView.as_view(), name='issue_books_from_cart'),
     path('staff/users-with-cart/', views.UsersWithCartView.as_view(), name='users_with_cart'),
+    path('my-borrowed/', views.MyBorrowedBooksView.as_view(), name='my_borrowed_books'),
+    path('staff/borrowing-users/', views.BorrowingUsersListView.as_view(), name='borrowing_users_list'),
+    path('staff/user/<int:user_id>/borrowed/', views.UserBorrowedBooksDetailView.as_view(), name='user_borrowed_books_detail'),
+    path('staff/return-book/<int:book_id>/', views.ReturnBookView.as_view(), name='return_book'),
     path('about/', AboutTemplateView.as_view(), name='about'),
 ]

@@ -22,7 +22,7 @@
                 {% endif %}
             </p>
             {% if book.available %}
-                <span class="text-success">[Доступна]</span>
+                <span class="text-success">Доступна</span>
                 {% if user.is_authenticated %}
                     <form method="post" action="{% url 'add_to_cart' book.id %}" style="display: inline;">
                         {% csrf_token %}
@@ -30,7 +30,7 @@
                     </form>
                 {% endif %}
             {% else %}
-                <span class="text-danger">[Недоступна]</span>
+                <span class="text-danger">Выдана</span>
             {% endif %}
 
             {% if perms.lib_app.change_book %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Мои выданные книги</h2>
+{% if borrowed_books %}
+  <ul class="list-group">
+    {% for bb in borrowed_books %}
+      <li class="list-group-item">
+        <strong>{{ bb.book.title }}</strong> ({{ bb.book.author.name }})
+        <br>
+        Выдана: {{ bb.borrowed_at|date:"d.m.Y H:i" }}
+        {% if bb.returned %}
+          <span class="text-success">[Возвращена {{ bb.returned_at|date:"d.m.Y" }}]</span>
+        {% else %}
+          <span class="text-warning">[Еще не возвращена]</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>У вас нет выданных книг.</p>
+{% endif %}
+<a href="{% url 'book_list' %}" class="btn btn-secondary">← К каталогу</a>
+{% endblock %}

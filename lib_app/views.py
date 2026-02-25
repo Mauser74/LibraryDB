@@ -5,11 +5,13 @@ from django.db.models import Q, F
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 
 from lib_app.forms import BookModelForm, AuthorModelForm, PublisherModelForm
 from lib_app.models import Book, Cart, BorrowedBook, Author, Publisher
+from user_app.models import CustomUser
 
 
 class IndexTemplateView(TemplateView):
@@ -455,3 +457,67 @@ class UsersWithCartView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         return Cart.objects.filter(books__isnull=False).distinct()
+
+
+
+# === 1. Пользователь: просмотр своих выданных книг ===
+class MyBorrowedBooksView(LoginRequiredMixin, ListView):
+    model = BorrowedBook
+    template_name = 'lib_app/my_borrowed_books.html'
+    context_object_name = 'borrowed_books'
+
+    def get_queryset(self):
+        return BorrowedBook.objects.filter(user=self.request.user).order_by('-borrowed_at')
+
+
+
+# === 2. Админ: список пользователей с выданными книгами ===
+class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = CustomUser
+    template_name = 'lib_app/borrowing_users_list.html'
+    context_object_name = 'users'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        # Только пользователи, у которых есть хотя бы одна выданная книга
+        return CustomUser.objects.filter(borrowedbook__isnull=False).distinct()
+
+
+
+# === 3. Админ: детали выданных книг конкретного пользователя ===
+class UserBorrowedBooksDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = CustomUser
+    template_name = 'lib_app/user_borrowed_books_detail.html'
+    context_object_name = 'borrower'
+    pk_url_kwarg = 'user_id'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['borrowed_books'] = BorrowedBook.objects.filter(user=self.object).order_by('-borrowed_at')
+        return context
+
+
+
+# === 4. Админ: вернуть книгу (POST-only) ===
+class ReturnBookView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def post(self, request, book_id):
+        borrowed = get_object_or_404(BorrowedBook, id=book_id, returned=False)
+        borrowed.returned = True
+        borrowed.returned_at = timezone.now()
+        borrowed.save()
+
+        # Делаем книгу доступной
+        book = borrowed.book
+        book.available = True
+        book.save()
+
+        messages.success(request, f'Книга «{book.title}» успешно возвращена.')
+        return redirect('user_borrowed_books_detail', user_id=borrowed.user.id)
