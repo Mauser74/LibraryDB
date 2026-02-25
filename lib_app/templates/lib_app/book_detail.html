@@ -5,31 +5,44 @@
     {% if book.translator %}
         <p>Переводчик: {{ book.translator }}</p>
     {% endif %}
+
     <h1>{{ book.title }}</h1>
     {% if book.year %}
         <p>Год издания: {{ book.year }}</p>
     {% else %}
         <p>Год издания неизвестен</p>
     {% endif %}
+
     {% if book.publisher %}
         <p>Издательство: {{ book.publisher }}</p>
     {% endif %}
+
     {% if book.isbn %}
         <p>ISBN: {{ book.isbn }}</p>
     {% endif %}
-    {% if book.thematic %}
-        <p>Тематика: {{ book.thematic }}</p>
+
+    {% if book.short_description %}
+        <u>Краткое описание</u><p>{{ book.short_description }}</p>
     {% endif %}
-    Выдана {{ book.times_of_issued }} раз<p>
+
+    {% if book.key_words %}
+        <u>Ключевые слова</u><p>{{ book.key_words }}</p>
+    {% endif %}
+
+    <p>Выдана {{ book.times_of_issued }} раз</p>
     {% if book.available %}
-        <span class="text-success">Доступна</span>
+        <span class="text-success">
+            <p>Доступна</p>
+        </span>
         {% if user.is_authenticated %}
-            <form method="post" action="{% url 'add_to_cart' book.id %}" style="display: inline;">
+            <form method="post" action="{% url 'add_to_cart' book.id %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-primary">В корзину</button>
             </form>
         {% endif %}
     {% else %}
-        <span class="text-danger">Выдана</span>
+        <span class="text-danger">
+            Выдана
+        </span>
     {% endif %}
 {% endblock %}
