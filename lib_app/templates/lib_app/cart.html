@@ -1,26 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Ваша корзина</h2>
+{% if is_own_cart %}
+    <h2>Ваша корзина</h2>
+{% else %}
+    <h2>Корзина пользователя: {{ cart.user.full_name }} ({{ cart.user.email }})</h2>
+{% endif %}
 
 {% if cart.books.exists %}
-    <ul>
-    {% for book in cart.books.all %}
-        <li>
-            {{ book.title }} — {{ book.author.name }}
-            <form method="post" action="{% url 'remove_from_cart' book.id %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-danger">Убрать</button>
-            </form>
-        </li>
-    {% endfor %}
+    <ul class="list-group">
+        {% for book in cart.books.all %}
+            <li class="list-group-item">
+                {{ book.title }} — {{ book.author.name }}
+                {% if is_own_cart %}
+                    <form method="post" action="{% url 'remove_from_cart' book.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger">Убрать</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
     </ul>
-    {% if user.is_staff %}
-        <p><em>Персонал может выдать эти книги через админку.</em></p>
+
+    {% if not is_own_cart and user.is_staff %}
+        <div class="mt-3">
+            <form method="post" action="{% url 'issue_books_from_cart' cart.user.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success"
+                        onclick="return confirm('Выдать все книги из корзины {{ cart.user.full_name }}?')">
+                    Выдать все книги
+                </button>
+            </form>
+        </div>
     {% endif %}
 {% else %}
     <p>Корзина пуста.</p>
 {% endif %}
 
-<a href="/">← Назад к каталогу</a>
+<a href="{% url 'book_list' %}" class="btn btn-secondary">← Назад к каталогу</a>
 {% endblock %}

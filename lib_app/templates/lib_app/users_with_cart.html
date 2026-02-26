@@ -18,14 +18,7 @@
           <td>{{ cart.user.full_name }} ({{ cart.user.email }})</td>
           <td>{{ cart.books.count }}</td>
           <td>
-            <a href="{% url 'view_cart' %}?user_id={{ cart.user.id }}" class="btn btn-sm btn-info">Просмотреть</a>
-            <form method="post" action="{% url 'issue_books_from_cart' cart.user.id %}" style="display: inline;">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-success"
-                      onclick="return confirm('Выдать все книги из корзины {{ cart.user.full_name }}?')">
-                Выдать книги
-              </button>
-            </form>
+            <a href="{% url 'staff_view_user_cart' cart.user.id %}" class="btn btn-sm btn-info">Просмотреть</a>
           </td>
         </tr>
       {% endfor %}

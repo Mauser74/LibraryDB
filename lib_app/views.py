@@ -390,21 +390,36 @@ class PublisherDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVie
 ################################
 
 class CartView(LoginRequiredMixin, DetailView):
-    """Просмотр корзины пользователя"""
+    """Просмотр корзины пользователя (для обычных пользователей)"""
     model = Cart
     template_name = 'lib_app/cart.html'
     context_object_name = 'cart'
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            messages.warning(request, 'У персонала нет личной корзины.')
+            return redirect('book_list')
+        return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         # Получаем или создаём корзину текущего пользователя
         cart, created = Cart.objects.get_or_create(user=self.request.user)
         return cart
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_own_cart'] = True
+        return context
+
 
 
 class AddToCartView(LoginRequiredMixin, View):
     """Добавить книгу в корзину"""
     def post(self, request, book_id):
+        if request.user.is_staff:
+            messages.error(request, 'Персонал не может добавлять книги в корзину.')
+            return redirect('book_list')
+
         book = get_object_or_404(Book, id=book_id)
         cart, created = Cart.objects.get_or_create(user=request.user)
 
@@ -460,8 +475,8 @@ class UsersWithCartView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 
-# === 1. Пользователь: просмотр своих выданных книг ===
 class MyBorrowedBooksView(LoginRequiredMixin, ListView):
+    """Просмотр пользователем взятых книг"""
     model = BorrowedBook
     template_name = 'lib_app/my_borrowed_books.html'
     context_object_name = 'borrowed_books'
@@ -471,8 +486,8 @@ class MyBorrowedBooksView(LoginRequiredMixin, ListView):
 
 
 
-# === 2. Админ: список пользователей с выданными книгами ===
 class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """Просмотр персоналом списока пользователей с выданными книгами"""
     model = CustomUser
     template_name = 'lib_app/borrowing_users_list.html'
     context_object_name = 'users'
@@ -488,6 +503,7 @@ class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 # === 3. Админ: детали выданных книг конкретного пользователя ===
 class UserBorrowedBooksDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    """Админ: детали выданных книг конкретного пользователя"""
     model = CustomUser
     template_name = 'lib_app/user_borrowed_books_detail.html'
     context_object_name = 'borrower'
@@ -521,3 +537,25 @@ class ReturnBookView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         messages.success(request, f'Книга «{book.title}» успешно возвращена.')
         return redirect('user_borrowed_books_detail', user_id=borrowed.user.id)
+
+
+
+class StaffViewUserCartView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    """Админ смотрит корзину конкретного пользователя"""
+    model = Cart
+    template_name = 'lib_app/cart.html'
+    context_object_name = 'cart'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_object(self, queryset=None):
+        user_id = self.kwargs.get('user_id')
+        user = get_object_or_404(CustomUser, id=user_id)
+        cart, created = Cart.objects.get_or_create(user=user)
+        return cart
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_own_cart'] = False
+        return context

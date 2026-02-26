@@ -156,6 +156,14 @@ class Cart(models.Model):
     )
     books = models.ManyToManyField(Book, blank=True, related_name='carts')
 
+    def clean(self):
+        if self.user.is_staff:
+            raise ValidationError("Персонал не может иметь корзину.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Корзина {self.user.full_name}"
 
