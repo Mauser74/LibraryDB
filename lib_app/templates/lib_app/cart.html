@@ -12,10 +12,21 @@
         {% for book in cart.books.all %}
             <li class="list-group-item">
                 {{ book.title }} — {{ book.author.name }}
+
                 {% if is_own_cart %}
+                    <!-- Владелец может убрать книгу -->
                     <form method="post" action="{% url 'remove_from_cart' book.id %}" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger">Убрать</button>
+                    </form>
+                {% elif user.is_staff %}
+                    <!-- Админ может убрать книгу из чужой корзины -->
+                    <form method="post" action="{% url 'staff_remove_from_cart' cart.user.id book.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-warning"
+                                onclick="return confirm('Удалить «{{ book.title }}» из корзины {{ cart.user.full_name }}?')">
+                            Убрать
+                        </button>
                     </form>
                 {% endif %}
             </li>

@@ -33,5 +33,6 @@ urlpatterns = [
     path('staff/user/<int:user_id>/borrowed/', views.UserBorrowedBooksDetailView.as_view(), name='user_borrowed_books_detail'),
     path('staff/return-book/<int:book_id>/', views.ReturnBookView.as_view(), name='return_book'),
     path('staff/cart/<int:user_id>/', views.StaffViewUserCartView.as_view(), name='staff_view_user_cart'),
+    path('staff/cart/<int:user_id>/remove/<int:book_id>/', views.StaffRemoveFromCartView.as_view(), name='staff_remove_from_cart'),
     path('about/', AboutTemplateView.as_view(), name='about'),
 ]

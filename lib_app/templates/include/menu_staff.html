@@ -1,8 +1,8 @@
 <!-- Основные пункты слева -->
 <ul class="navbar-nav me-auto">
     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Главная</a></li>
-    <li><a class="nav-link" href="{% url 'users_with_cart' %}">Пользователи с корзинами</a></li>
-    <li class="nav-item"><a class="nav-link" href="{% url 'borrowing_users_list' %}">Выданные книги</a></li>
+    <li><a class="nav-link" href="{% url 'users_with_cart' %}">Выдать книги</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'borrowing_users_list' %}">Принять книги</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">О нас</a></li>
 </ul>
 
@@ -28,6 +28,8 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'publisher_list' %}">Издательства</a></li>
             <li><a class="dropdown-item" href="{% url 'publisher_add' %}">Добавить издательство</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'user_list' %}">Пользователи</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'admin:index' %}">Django Admin</a></li>
         </ul>

@@ -443,6 +443,20 @@ class RemoveFromCartView(LoginRequiredMixin, View):
 
 
 
+class StaffRemoveFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Админ убирает книгу из корзины пользователя"""
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def post(self, request, user_id, book_id):
+        cart = get_object_or_404(Cart, user_id=user_id)
+        book = get_object_or_404(Book, id=book_id)
+        cart.books.remove(book)
+        messages.success(request, f'Книга "{book.title}" удалена из корзины пользователя {cart.user.full_name}.')
+        return redirect('staff_view_user_cart', user_id=user_id)
+
+
+
 class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Админ выдаёт все книги из корзины пользователя"""
     def test_func(self):
@@ -487,7 +501,7 @@ class MyBorrowedBooksView(LoginRequiredMixin, ListView):
 
 
 class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    """Просмотр персоналом списока пользователей с выданными книгами"""
+    """Просмотр персоналом списка пользователей с выданными книгами"""
     model = CustomUser
     template_name = 'lib_app/borrowing_users_list.html'
     context_object_name = 'users'
@@ -501,9 +515,8 @@ class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 
-# === 3. Админ: детали выданных книг конкретного пользователя ===
 class UserBorrowedBooksDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    """Админ: детали выданных книг конкретного пользователя"""
+    """Просмотр персоналом выданных книг конкретного пользователя"""
     model = CustomUser
     template_name = 'lib_app/user_borrowed_books_detail.html'
     context_object_name = 'borrower'
@@ -519,8 +532,8 @@ class UserBorrowedBooksDetailView(LoginRequiredMixin, UserPassesTestMixin, Detai
 
 
 
-# === 4. Админ: вернуть книгу (POST-only) ===
 class ReturnBookView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Персонал возвращает книгу"""
     def test_func(self):
         return self.request.user.is_staff
 
@@ -535,13 +548,13 @@ class ReturnBookView(LoginRequiredMixin, UserPassesTestMixin, View):
         book.available = True
         book.save()
 
-        messages.success(request, f'Книга «{book.title}» успешно возвращена.')
+        messages.success(request, f'Книга "{book.title}" успешно возвращена.')
         return redirect('user_borrowed_books_detail', user_id=borrowed.user.id)
 
 
 
 class StaffViewUserCartView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    """Админ смотрит корзину конкретного пользователя"""
+    """Персонал смотрит корзину конкретного пользователя"""
     model = Cart
     template_name = 'lib_app/cart.html'
     context_object_name = 'cart'

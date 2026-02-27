@@ -5,43 +5,8 @@ from datetime import datetime, date, timedelta
 from django.conf import settings
 
 
-# Create your models here.
-
 class Author(models.Model):
     """Модель автора книги"""
-    name = models.CharField(max_length=200)
-    date_of_birth = models.DateField(null=True, blank=True)
-    date_of_death = models.DateField(null=True, blank=True)
-
-    def clean(self):
-        """
-        Проверяет логическую корректность дат жизни.
-        Вызывается при валидации формы или при вызове full_clean().
-        """
-        if self.date_of_birth and self.date_of_death:
-            if self.date_of_birth > self.date_of_death:
-                raise ValidationError(
-                    "Дата рождения не может быть позже даты смерти."
-                )
-        if self.date_of_death and self.date_of_death > date.today():
-            raise ValidationError(
-                "Дата смерти не может быть в будущем."
-            )
-
-    def save(self, *args, **kwargs):
-        """
-        Переопределяем save(), чтобы автоматически вызывать валидацию.
-        """
-        self.full_clean()  # вызывает clean() и другие валидации
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-
-
-class Translator(models.Model):
-    """Модель переводчика книги"""
     name = models.CharField(max_length=200)
     date_of_birth = models.DateField(null=True, blank=True)
     date_of_death = models.DateField(null=True, blank=True)
@@ -95,13 +60,6 @@ class Book(models.Model):
     title = models.CharField(max_length=255)
     author = models.ForeignKey(
         Author,
-        on_delete=models.SET_NULL,
-        related_name='books',
-        null=True,
-        blank=True
-    )
-    translator = models.ForeignKey(
-        Translator,
         on_delete=models.SET_NULL,
         related_name='books',
         null=True,

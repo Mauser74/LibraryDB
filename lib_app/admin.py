@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Book, Author, Translator, Publisher, Cart, BorrowedBook
+from .models import Book, Author, Publisher, Cart, BorrowedBook
 from user_app.models import CustomUser
 
 
@@ -20,10 +20,10 @@ class AuthorAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(Translator)
-class TranslatorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'date_of_birth', 'date_of_death')
-    ordering = ('name',)
+# @admin.register(Translator)
+# class TranslatorAdmin(admin.ModelAdmin):
+#     list_display = ('name', 'date_of_birth', 'date_of_death')
+#     ordering = ('name',)
 
 
 

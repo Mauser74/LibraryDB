@@ -12,7 +12,7 @@ class BookModelForm(forms.ModelForm):
         fields = (
             'title',
             'author',
-            'translator',
+            #'translator',
             'publisher',
             'isbn',
             'year',
@@ -26,7 +26,7 @@ class BookModelForm(forms.ModelForm):
         labels = {
             'title': 'Название книги',
             'author': 'Автор',
-            'translator': 'Переводчик',
+            #'translator': 'Переводчик',
             'publisher': 'Издательство',
             'isbn': 'ISBN',
             'year': 'Год издания',
@@ -38,7 +38,7 @@ class BookModelForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Введите название'}),
             'author': forms.Select(attrs={'class': 'form-control'}),
-            'translator': forms.Select(attrs={'class': 'form-control'}),
+            #'translator': forms.Select(attrs={'class': 'form-control'}),
             'publisher': forms.Select(attrs={'class': 'form-control'}),
             'isbn': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 32, 'placeholder': 'Введите ISBN'}),
             'year': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Год издания'}),
@@ -81,16 +81,14 @@ class AuthorModelForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(
                 attrs={
                     'class': 'form-control',
-                    'type': 'date',
-                    #'placeholder': 'ГГГГ-ММ-ДД'
+                    'type': 'date'
                 },
                 format='%Y-%m-%d'
             ),
             'date_of_death': forms.DateInput(
                 attrs={
                     'class': 'form-control',
-                    'type': 'date',
-                    #'placeholder': 'ГГГГ-ММ-ДД'
+                    'type': 'date'
                 },
                 format='%Y-%m-%d'
             )

@@ -1,6 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
 from django.contrib.auth import get_user_model
+
+from user_app.models import CustomUser
 
 User = get_user_model()
 
@@ -49,3 +51,30 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         return self.cleaned_data['username'].lower()
+
+
+
+class CustomUserChangeForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ('full_name', 'email', 'date_of_birth', 'is_active')  # ← нет 'password'
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'date_of_birth': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d'
+            ),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+# class CustomUserChangeForm(UserChangeForm):
+#     class Meta(UserChangeForm.Meta):
+#         model = CustomUser
+#         fields = ('full_name', 'email', 'date_of_birth', 'is_active')
+#         widgets = {
+#             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+#             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+#             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d'),
+#             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+#         }
