@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+from django.db import models
 from django.db.models import Q, F
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
@@ -145,15 +146,15 @@ class AuthorDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
 ################################
 
 class BookListView(ListView):
-    """Список всех книг"""
+    """Список всех книг, с фильтрацией"""
     model = Book
     template_name = 'lib_app/book_list.html'
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
-        query = self.request.GET.get('q', '')
+        # Сортировка: сначала по имени автора, потом по названию книги
+        queryset = Book.objects.select_related('author').order_by('author__name', 'title')
+        query = self.request.GET.get('q', '').strip()
         if query:
             queryset = queryset.filter(
                 Q(title__icontains=query) |
@@ -161,8 +162,6 @@ class BookListView(ListView):
                 Q(isbn__icontains=query) |
                 Q(key_words__icontains=query)
             )
-        else:
-            queryset = Book.objects.all()
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -175,17 +174,6 @@ class BookListView(ListView):
 class BookDetailView(DetailView):
     """Детальная информация о книге"""
     model = Book
-
-    def get(self, request, *args, **kwargs):
-        book = self.get_object()
-        Book.objects.filter(pk=book.pk).update(times_of_issued=F('times_of_issued') + 1)
-        return super().get(request, *args, **kwargs)
-
-    # def get(self, request, *args, **kwargs):
-    #     book = self.get_object()
-    #     book.times_of_issued = getattr(book, 'times_of_issued', 0) + 1
-    #     book.save(update_fields=['times_of_issued'])
-    #     return super().get(request, *args, **kwargs)
 
 
 
@@ -467,8 +455,10 @@ class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
         for book in cart.books.all():
             if book.available:
                 BorrowedBook.objects.create(user=cart.user, book=book)
-                book.available = False
-                book.save()
+                Book.objects.filter(id=book.id).update(
+                    available=False,
+                    times_of_issued=models.F('times_of_issued') + 1
+                )
         cart.books.clear()
         messages.success(request, f'Книги из корзины пользователя {cart.user.full_name} выданы.')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
