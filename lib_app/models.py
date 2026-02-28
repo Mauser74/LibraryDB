@@ -11,6 +11,10 @@ class Author(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     date_of_death = models.DateField(null=True, blank=True)
 
+    class Meta:
+        # Порядок сортировки по умолчанию
+        ordering = ['name']
+
     def clean(self):
         """
         Проверяет логическую корректность дат жизни.
@@ -40,6 +44,7 @@ class Author(models.Model):
 
 class Publisher(models.Model):
     """Модель издательства книги"""
+
     name = models.CharField(
         'Название издательства',
         max_length=64,
@@ -49,6 +54,8 @@ class Publisher(models.Model):
     class Meta:
         verbose_name = 'Издательство'
         verbose_name_plural = 'Издательства'
+        # Порядок сортировки по умолчанию
+        ordering = ['name']
 
     def __str__(self):
         return self.name

@@ -22,10 +22,14 @@
                     <td>{% if user.is_active %}Да{% else %}Нет{% endif %}</td>
                     <td>
                         <a href="{% url 'user_edit' user.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                        <a href="{% url 'user_delete' user.pk %}" class="btn btn-sm btn-danger"
-                            onclick="return confirm('Удалить пользователя {{ user.full_name }}?')">
-                            Удалить
-                        </a>
+                        <form method="post" action="{% url 'user_delete' user.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-sm btn-danger"
+                                    onclick="return confirm('Удалить пользователя «{{ user.full_name }}»?')">
+                                Удалить
+                            </button>
+                        </form>
                     </td>
                 </tr>
             {% endfor %}

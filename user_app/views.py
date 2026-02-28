@@ -15,6 +15,11 @@ class RegisterView(FormView):
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('index')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Регистрация'
+        return context
+
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -28,6 +33,11 @@ class CustomLoginView(LoginView):
     form_class = CustomAuthenticationForm
     redirect_authenticated_user = True
     success_url = reverse_lazy('book_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Вход в личный кабинет'
+        return context
 
     def get_success_url(self):
         return self.success_url
@@ -46,12 +56,20 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'user_app/user_list.html'
     context_object_name = 'users'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Список пользователей'
+        return context
+
     def test_func(self):
         return self.request.user.is_staff
 
     def get_queryset(self):
         # Исключаем персонал и суперпользователей
-        return CustomUser.objects.filter(is_staff=False, is_superuser=False)
+        return CustomUser.objects.filter(
+            is_staff=False,
+            is_superuser=False
+        ).order_by('full_name')
 
 
 
@@ -62,11 +80,18 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'user_app/user_edit.html'
     success_url = reverse_lazy('user_list')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Редактирование учётной записи {self.object.full_name}'
+        return context
+
     def test_func(self):
-        return self.request.user.is_staff
+        user = self.request.user
+        target_user = self.get_object()
+        return user.is_staff and user.pk != target_user.pk
 
     def form_valid(self, form):
-        messages.success(self.request, f'Пользователь {self.object.full_name} обновлён.')
+        messages.success(self.request, f'Учётная запись {self.object.full_name} обновлёна.')
         return super().form_valid(form)
 
 
@@ -74,12 +99,11 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Форма подтверждения удаления учётной записи пользователя персоналом"""
     model = CustomUser
-    template_name = 'user_app/user_delete.html'
     success_url = reverse_lazy('user_list')
 
     def test_func(self):
         return self.request.user.is_staff
 
     def form_valid(self, form):
-        messages.success(self.request, f'Пользователь {self.object.full_name} удалён.')
+        messages.success(self.request, f'Учётная запись пользователя {self.object.full_name} удалёна.')
         return super().form_valid(form)

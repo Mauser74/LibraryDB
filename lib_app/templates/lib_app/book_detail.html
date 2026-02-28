@@ -1,48 +1,63 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <strong>{{ book.author }}</strong>
+    <h1>{{ book.title }}</h1>
+
+    <p><strong>Автор:</strong> {{ book.author }}</p>
+
     {% if book.translator %}
-        <p>Переводчик: {{ book.translator }}</p>
+        <p><strong>Переводчик:</strong> {{ book.translator }}</p>
     {% endif %}
 
-    <h1>{{ book.title }}</h1>
     {% if book.year %}
-        <p>Год издания: {{ book.year }}</p>
+        <p><strong>Год издания:</strong> {{ book.year }}</p>
     {% else %}
-        <p>Год издания неизвестен</p>
+        <p><strong>Год издания:</strong> неизвестен</p>
     {% endif %}
 
     {% if book.publisher %}
-        <p>Издательство: {{ book.publisher }}</p>
+        <p><strong>Издательство:</strong> {{ book.publisher }}</p>
     {% endif %}
 
     {% if book.isbn %}
-        <p>ISBN: {{ book.isbn }}</p>
+        <p><strong>ISBN:</strong> {{ book.isbn }}</p>
     {% endif %}
 
     {% if book.short_description %}
-        <u>Краткое описание</u><p>{{ book.short_description }}</p>
+        <p><strong>Краткое описание:</strong><br>{{ book.short_description }}</p>
     {% endif %}
 
     {% if book.key_words %}
-        <u>Ключевые слова</u><p>{{ book.key_words }}</p>
+        <p><strong>Ключевые слова:</strong><br>{{ book.key_words }}</p>
     {% endif %}
 
-    <p>Выдана {{ book.times_of_issued }} раз</p>
+    <p><strong>Выдана {{ book.times_of_issued }} раз(а)</strong></p>
+
     {% if book.available %}
-        <span class="text-success">
-            <p>Доступна</p>
-        </span>
-        {% if user.is_authenticated %}
-            <form method="post" action="{% url 'add_to_cart' book.id %}">
+        <span class="text-success">Доступна</span>
+        {% if user.is_authenticated and not user.is_staff %}
+            <form method="post" action="{% url 'add_to_cart' book.id %}" class="mt-2">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-sm btn-primary">В корзину</button>
             </form>
         {% endif %}
     {% else %}
-        <span class="text-danger">
-            Выдана
-        </span>
+        <span class="text-danger">Выдана</span>
     {% endif %}
+
+    <!-- Кнопки управления — ВНИЗУ -->
+    <div class="mt-4">
+        {% if perms.lib_app.change_book %}
+            <a href="{% url 'book_edit' book.pk %}" class="btn btn-warning">Редактировать</a>
+        {% endif %}
+        {% if perms.lib_app.delete_book %}
+            <a href="{% url 'book_delete' book.pk %}"
+               class="btn btn-danger ms-2"
+               onclick="return confirm('Удалить книгу «{{ book.title }}»?')">
+                Удалить
+            </a>
+        {% endif %}
+    </div>
+
+    <a href="{% url 'book_list' %}" class="btn btn-secondary mt-3">← Назад к списку книг</a>
 {% endblock %}

@@ -1,10 +1,9 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.db import models
-from django.db.models import Q, F
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q, F, Count
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views import View
@@ -21,6 +20,11 @@ class IndexTemplateView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Главная страница'
+        # Общее количество книг в библиотеке
+        context['total_books'] = Book.objects.count()
+        # Топ-5 самых выдаваемых книг (по times_of_issued)
+        context['top_books'] = Book.objects.filter(times_of_issued__gt=0).order_by('-times_of_issued')[:5]
+
         return context
 
 
@@ -43,12 +47,11 @@ class AuthorListView(ListView):
     """Список всех авторов"""
     model = Author
     template_name = 'lib_app/author_list.html'
-    context_object_name = 'authors'     # вместо object_list
-    paginate_by = 20                    # выводим по 20 позиций
+    context_object_name = 'authors'
+    paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
+        queryset = Author.objects.all()
         query = self.request.GET.get('q', '').strip()
         if query:
             queryset = queryset.filter(name__icontains=query)
@@ -56,9 +59,8 @@ class AuthorListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        query = self.request.GET.get('q', '').strip()
-        context['page_title'] = 'Список авторов'
-        context['search_query'] = query  # чтобы отобразить запрос в форме
+        context['title'] = 'Список авторов'
+        context['search_query'] = self.request.GET.get('q', '').strip()
         return context
 
 
@@ -71,6 +73,11 @@ class AuthorCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     success_url = reverse_lazy('author_list')
     permission_required = 'lib_app.add_author'
     context_object_name = 'author'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Добавление автора'
+        return context
 
     def form_valid(self, form):
         """Обработка успешной отправки формы"""
@@ -99,6 +106,11 @@ class AuthorUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     success_url = reverse_lazy('author_list')
     permission_required = 'lib_app.change_author'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Редактирование автора "{self.object.name}"'
+        return context
+
     def form_valid(self, form):
         """Обработка успешной отправки формы"""
         response = super().form_valid(form)
@@ -121,7 +133,6 @@ class AuthorUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 class AuthorDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """Удаление автора"""
     model = Author
-    template_name = 'lib_app/author_delete.html'
     success_url = reverse_lazy('author_list')
     permission_required = 'lib_app.delete_author'
 
@@ -166,7 +177,8 @@ class BookListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = 'Список книг'
+        context['title'] = 'Список книг'
+        context['search_query'] = self.request.GET.get('q', '').strip()
         return context
 
 
@@ -174,6 +186,11 @@ class BookListView(ListView):
 class BookDetailView(DetailView):
     """Детальная информация о книге"""
     model = Book
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Книга "{self.object.title}"'
+        return context
 
 
 
@@ -184,6 +201,11 @@ class BookCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     form_class = BookModelForm
     success_url = reverse_lazy('book_list')
     permission_required = 'lib_app.add_book'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Добавление книги'
+        return context
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -209,6 +231,11 @@ class BookUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     form_class = BookModelForm
     success_url = reverse_lazy('book_list')
     permission_required = 'lib_app.change_book'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Редактирование книги "{self.object.title}"'
+        return context
 
     def form_valid(self, form):
         messages.success(
@@ -236,7 +263,6 @@ class BookUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
 class BookDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """Удаление книги"""
     model = Book
-    template_name = 'lib_app/book_delete.html'
     success_url = reverse_lazy('book_list')
     permission_required = 'lib_app.delete_book'
 
@@ -259,7 +285,6 @@ class BookDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
             )
             return HttpResponseRedirect(self.success_url)
 
-        # Если всё чисто — удаляем
         messages.success(
             self.request,
             f'Книга «{book.title}» успешно удалена.'
@@ -280,7 +305,7 @@ class PublisherListView(ListView):
     paginate_by = 20                     # выводим по 20 позиций
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Publisher.objects.all().order_by('name')
         # Извлекает значение параметра q из URL, если q не задан — возвращает пустую строку ''
         query = self.request.GET.get('q', '').strip()
         if query:
@@ -290,7 +315,7 @@ class PublisherListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
-        context['page_title'] = 'Список издательств'
+        context['title'] = 'Список издательств'
         context['search_query'] = query  # чтобы отобразить запрос в форме
         return context
 
@@ -321,6 +346,11 @@ class PublisherCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVie
         )
         return super().form_invalid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Добавление издательства'
+        return context
+
 
 
 class PublisherUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -330,6 +360,11 @@ class PublisherUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVie
     template_name = 'lib_app/publisher_edit.html'
     success_url = reverse_lazy('publisher_list')
     permission_required = 'lib_app.change_publisher'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Редактирование издательства "{self.object.name}"'
+        return context
 
     def form_valid(self, form):
         """Обработка успешной отправки формы"""
@@ -353,7 +388,6 @@ class PublisherUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVie
 class PublisherDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """Удаление издательства"""
     model = Publisher
-    template_name = 'lib_app/publisher_delete.html'
     success_url = reverse_lazy('publisher_list')
     permission_required = 'lib_app.delete_publisher'
 
@@ -390,13 +424,15 @@ class CartView(LoginRequiredMixin, DetailView):
         return super().get(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
-        # Получаем или создаём корзину текущего пользователя
         cart, created = Cart.objects.get_or_create(user=self.request.user)
         return cart
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Упорядочиваем книги отдельно
+        context['ordered_books'] = self.object.books.select_related('author').order_by('author__name', 'title')
         context['is_own_cart'] = True
+        context['title'] = 'Корзина'
         return context
 
 
@@ -475,7 +511,15 @@ class UsersWithCartView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_staff
 
     def get_queryset(self):
-        return Cart.objects.filter(books__isnull=False).distinct()
+        # Выводим с сортировкой по имени пользователя
+        return Cart.objects.filter(
+            books__isnull=False
+        ).select_related('user').order_by('user__full_name').distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Пользователи с книгами в корзине'
+        return context
 
 
 
@@ -484,9 +528,19 @@ class MyBorrowedBooksView(LoginRequiredMixin, ListView):
     model = BorrowedBook
     template_name = 'lib_app/my_borrowed_books.html'
     context_object_name = 'borrowed_books'
+    paginate_by = 10
 
     def get_queryset(self):
-        return BorrowedBook.objects.filter(user=self.request.user).order_by('-borrowed_at')
+        # Выводим с сортировкой по имени автора и названию книги
+        return BorrowedBook.objects.filter(
+            user=self.request.user,
+            returned=False  # только невозвращённые книги
+        ).select_related('book__author').order_by('book__author__name', 'book__title')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Мои выданные книги'
+        return context
 
 
 
@@ -500,24 +554,43 @@ class BorrowingUsersListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return self.request.user.is_staff
 
     def get_queryset(self):
-        # Только пользователи, у которых есть хотя бы одна выданная книга
-        return CustomUser.objects.filter(borrowedbook__isnull=False).distinct()
+        return CustomUser.objects.filter(
+            borrowedbook__isnull=False,     # Только пользователи, у которых есть хотя бы одна выданная книга
+            borrowedbook__returned=False    # Только активные выдачи
+        ).annotate(
+            active_books_count=Count('borrowedbook')
+        ).order_by('full_name').distinct()  # Сортировка по имени пользователя
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Список пользователей с книгами'
+        return context
 
 
 
-class UserBorrowedBooksDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    """Просмотр персоналом выданных книг конкретного пользователя"""
-    model = CustomUser
-    template_name = 'lib_app/user_borrowed_books_detail.html'
-    context_object_name = 'borrower'
-    pk_url_kwarg = 'user_id'
+class UserBorrowedBooksListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    """Просмотр персоналом выданных книг для конкретного пользователя"""
+    model = BorrowedBook
+    template_name = 'lib_app/user_borrowed_books_list.html'
+    context_object_name = 'borrowed_books'
+    paginate_by = 10  # ← пагинация "из коробки"
 
     def test_func(self):
         return self.request.user.is_staff
 
+    def get_queryset(self):
+        # Получаем пользователя из URL
+        self.borrower = get_object_or_404(CustomUser, pk=self.kwargs['user_id'])
+        # Фильтруем только НЕВОЗВРАЩЁННЫЕ книги
+        return BorrowedBook.objects.filter(
+            user=self.borrower,
+            returned=False
+        ).select_related('book__author').order_by('book__author__name', 'book__title')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['borrowed_books'] = BorrowedBook.objects.filter(user=self.object).order_by('-borrowed_at')
+        context['borrower'] = self.borrower
+        context['title'] = f'Выданные книги: {self.borrower.full_name}'
         return context
 
 
@@ -560,5 +633,8 @@ class StaffViewUserCartView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Упорядочиваем книги отдельно
+        context['ordered_books'] = self.object.books.select_related('author').order_by('author__name', 'title')
         context['is_own_cart'] = False
+        context['title'] = 'Корзина пользователя'
         return context

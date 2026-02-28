@@ -7,9 +7,9 @@
     <h2>Корзина пользователя: {{ cart.user.full_name }} ({{ cart.user.email }})</h2>
 {% endif %}
 
-{% if cart.books.exists %}
+{% if ordered_books %}
     <ul class="list-group">
-        {% for book in cart.books.all %}
+        {% for book in ordered_books %}
             <li class="list-group-item">
                 {{ book.title }} — {{ book.author.name }}
 
