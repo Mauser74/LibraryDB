@@ -177,8 +177,16 @@ class BookListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Список книг'
+        context['page_title'] = 'Список книг'
         context['search_query'] = self.request.GET.get('q', '').strip()
+
+        # Передаём множество ID книг, которые уже в корзине текущего пользователя
+        if self.request.user.is_authenticated and not self.request.user.is_staff:
+            cart_books = Cart.objects.filter(user=self.request.user).values_list('books__id', flat=True)
+            context['cart_book_ids'] = set(cart_books)
+        else:
+            context['cart_book_ids'] = set()
+
         return context
 
 
@@ -460,10 +468,12 @@ class AddToCartView(LoginRequiredMixin, View):
 class RemoveFromCartView(LoginRequiredMixin, View):
     """Убрать книгу из корзины"""
     def post(self, request, book_id):
-        cart = get_object_or_404(Cart, user=request.user)
         book = get_object_or_404(Book, id=book_id)
-        cart.books.remove(book)
-        return redirect('view_cart')
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        if book in cart.books.all():
+            cart.books.remove(book)
+            messages.success(request, f'Книга «{book.title}» удалена из корзины.')
+        return redirect('book_list')
 
 
 
