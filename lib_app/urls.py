@@ -5,7 +5,8 @@ from .views import (
     BookListView, BookDetailView, BookCreateView, BookUpdateView, BookDeleteView,
     PublisherListView, PublisherCreateView, PublisherUpdateView, PublisherDeleteView,
     CartView, AddToCartView, RemoveFromCartView, IssueBooksFromCartView,
-    IndexTemplateView, AboutTemplateView,
+    IndexTemplateView, AboutTemplateView, UsersWithCartView, MyBorrowedBooksView, BorrowingUsersListView,
+    UserBorrowedBooksListView, ReturnBookView, StaffViewUserCartView, StaffRemoveFromCartView,
 )
 
 urlpatterns = [
@@ -27,12 +28,12 @@ urlpatterns = [
     path('cart/add/<int:book_id>/', AddToCartView.as_view(), name='add_to_cart'),
     path('cart/remove/<int:book_id>/', RemoveFromCartView.as_view(), name='remove_from_cart'),
     path('staff/issue-cart/<int:user_id>/', IssueBooksFromCartView.as_view(), name='issue_books_from_cart'),
-    path('staff/users-with-cart/', views.UsersWithCartView.as_view(), name='users_with_cart'),
-    path('my-borrowed/', views.MyBorrowedBooksView.as_view(), name='my_borrowed_books'),
-    path('staff/borrowing-users/', views.BorrowingUsersListView.as_view(), name='borrowing_users_list'),
-    path('staff/user/<int:user_id>/borrowed/', views.UserBorrowedBooksListView.as_view(), name='user_borrowed_books_detail'),
-    path('staff/return-book/<int:book_id>/', views.ReturnBookView.as_view(), name='return_book'),
-    path('staff/cart/<int:user_id>/', views.StaffViewUserCartView.as_view(), name='staff_view_user_cart'),
-    path('staff/cart/<int:user_id>/remove/<int:book_id>/', views.StaffRemoveFromCartView.as_view(), name='staff_remove_from_cart'),
+    path('staff/users-with-cart/', UsersWithCartView.as_view(), name='users_with_cart'),
+    path('my-borrowed/', MyBorrowedBooksView.as_view(), name='my_borrowed_books'),
+    path('staff/borrowing-users/', BorrowingUsersListView.as_view(), name='borrowing_users_list'),
+    path('staff/user/<int:user_id>/borrowed/', UserBorrowedBooksListView.as_view(), name='user_borrowed_books_detail'),
+    path('staff/return-book/<int:book_id>/', ReturnBookView.as_view(), name='return_book'),
+    path('staff/cart/<int:user_id>/', StaffViewUserCartView.as_view(), name='staff_view_user_cart'),
+    path('staff/cart/<int:user_id>/remove/<int:book_id>/', StaffRemoveFromCartView.as_view(), name='staff_remove_from_cart'),
     path('about/', AboutTemplateView.as_view(), name='about'),
 ]
