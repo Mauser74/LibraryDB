@@ -166,12 +166,13 @@ class BookListView(ListView):
         # Сортировка: сначала по имени автора, потом по названию книги
         queryset = Book.objects.select_related('author').order_by('author__name', 'title')
         query = self.request.GET.get('q', '').strip()
+
         if query:
             queryset = queryset.filter(
-                Q(title__icontains=query) |
-                Q(author__name__icontains=query) |
-                Q(isbn__icontains=query) |
-                Q(key_words__icontains=query)
+                Q(title__contains=query) |
+                Q(author__name__contains=query) |
+                Q(isbn__contains=query) |
+                Q(key_words__contains=query)
             )
         return queryset
 
@@ -507,7 +508,7 @@ class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
                 )
         cart.books.clear()
         messages.success(request, f'Книги из корзины пользователя {cart.user.full_name} выданы.')
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        return redirect('users_with_cart')
 
 
 

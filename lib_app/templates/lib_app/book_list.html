@@ -4,7 +4,7 @@
     <h2>{{ title }}</h2>
 
     <form method="get" class="mb-3">
-        <label for="site-search">Поиск книги по названию, автору или ISBN:</label>
+        <label for="site-search">Поиск по названию, автору, ключевым словам или ISBN:</label>
         <input type="search" id="site-search" name="q" value="{{ search_query|default:'' }}" class="form-control" style="max-width: 400px; display: inline;">
         <button type="submit" class="btn btn-primary">Найти</button>
     </form>
