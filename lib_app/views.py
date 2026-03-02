@@ -508,7 +508,7 @@ class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
                 )
         cart.books.clear()
         messages.success(request, f'Книги из корзины пользователя {cart.user.full_name} выданы.')
-        return redirect('users_with_cart')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
 

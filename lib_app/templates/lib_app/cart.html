@@ -48,5 +48,9 @@
     <p>Корзина пуста.</p>
 {% endif %}
 
-<a href="{% url 'users_with_cart' %}" class="btn btn-secondary">← Назад к списку</a>
+{% if not is_own_cart and user.is_staff %}
+    <a href="{% url 'users_with_cart' %}" class="btn btn-secondary">← Назад к списку</a>
+{% else %}
+    <a href="{% url 'book_list' %}" class="btn btn-secondary">← Назад в каталог</a>
+{% endif %}
 {% endblock %}
