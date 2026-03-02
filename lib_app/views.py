@@ -494,11 +494,27 @@ class StaffRemoveFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
     """Админ выдаёт все книги из корзины пользователя"""
+    # def test_func(self):
+    #     return self.request.user.is_staff
+    #
+    # def post(self, request, user_id):
+    #     cart = get_object_or_404(Cart, user_id=user_id)
+    #     for book in cart.books.all():
+    #         if book.available:
+    #             BorrowedBook.objects.create(user=cart.user, book=book)
+    #             Book.objects.filter(id=book.id).update(
+    #                 available=False,
+    #                 times_of_issued=models.F('times_of_issued') + 1
+    #             )
+    #     cart.books.clear()
+    #     messages.success(request, f'Книги из корзины пользователя {cart.user.full_name} выданы.')
+    #     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     def test_func(self):
         return self.request.user.is_staff
 
     def post(self, request, user_id):
         cart = get_object_or_404(Cart, user_id=user_id)
+        # Логика выдачи книг
         for book in cart.books.all():
             if book.available:
                 BorrowedBook.objects.create(user=cart.user, book=book)
@@ -506,9 +522,11 @@ class IssueBooksFromCartView(LoginRequiredMixin, UserPassesTestMixin, View):
                     available=False,
                     times_of_issued=models.F('times_of_issued') + 1
                 )
+        # Очищаем корзину
         cart.books.clear()
         messages.success(request, f'Книги из корзины пользователя {cart.user.full_name} выданы.')
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        # Перенаправляем на страницу со списком пользователей с непустыми корзинами
+        return redirect('users_with_cart')
 
 
 
