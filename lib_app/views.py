@@ -465,16 +465,17 @@ class AddToCartView(LoginRequiredMixin, View):
         return redirect('book_list')
 
 
-
 class RemoveFromCartView(LoginRequiredMixin, View):
-    """Убрать книгу из корзины"""
+    """Пользователь удаляет книгу из своей корзины"""
     def post(self, request, book_id):
+        # Получаем корзину текущего пользователя
+        cart = get_object_or_404(Cart, user=request.user)
         book = get_object_or_404(Book, id=book_id)
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        if book in cart.books.all():
-            cart.books.remove(book)
-            messages.success(request, f'Книга «{book.title}» удалена из корзины.')
-        return redirect('book_list')
+        # Удаляем книгу из корзины
+        cart.books.remove(book)
+        messages.success(request, f'Книга "{book.title}" удалена из корзины.')
+        # Перенаправляем обратно на страницу корзины пользователя
+        return redirect('view_cart')
 
 
 
